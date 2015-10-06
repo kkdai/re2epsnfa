@@ -96,6 +96,8 @@ func (r *Re2EpsNFA) calculateNext(re string) {
 				}
 				j = j + 1
 			}
+			r.nextParentheses = append(r.nextParentheses, j)
+
 		} else {
 			r.nextParentheses = append(r.nextParentheses, i)
 		}
@@ -216,6 +218,7 @@ func (r *Re2EpsNFA) StartParse() string {
 	var result []byte
 	fmt.Println(r.regexString)
 	r.calculateNext(r.regexString)
+	fmt.Println("Next Pa=", r.nextParentheses)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
 

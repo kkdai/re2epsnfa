@@ -15,16 +15,22 @@ type Edge struct {
 	DstState int
 }
 
+type Closure struct {
+	Src int
+	Dst int
+}
 type Re2EpsNFA struct {
 	regexString     string
 	nextParentheses []int
 	edgeMap         map[Edge]bool
 	stateCount      int
+	closureMap      map[Closure]bool
 }
 
 func NewRe2EpsNFA(str string) *Re2EpsNFA {
 	newRe2NFA := &Re2EpsNFA{regexString: str}
 	newRe2NFA.edgeMap = make(map[Edge]bool)
+	newRe2NFA.closureMap = make(map[Closure]bool)
 	return newRe2NFA
 }
 
@@ -94,6 +100,50 @@ func (r *Re2EpsNFA) calculateNext(re string) {
 	}
 }
 
+func (r *Re2EpsNFA) checkClosureExist(src, target int) bool {
+	closureExist, _ := r.closureMap[Closure{Src: src, Dst: target}]
+	return closureExist
+}
+
+func (r *Re2EpsNFA) checkPathExist(src, input, dst int) bool {
+
+	pathExist, _ := r.edgeMap[Edge{SrcState: src, Input: input, DstState: dst}]
+	return pathExist
+}
+
+func (r *Re2EpsNFA) calcClosure() {
+	var queue []int
+
+	for i := 0; i <= r.stateCount; i++ {
+		for j := 0; j <= r.stateCount; j++ {
+			r.closureMap[Closure{Src: i, Dst: j}] = true
+		}
+
+		head := -1
+		tail := 0
+		queue[0] = i
+
+		r.closureMap[Closure{Src: i, Dst: i}] = true
+
+		for head < tail {
+			head = head + 1
+			j := queue[head]
+
+			for k := 0; k <= r.stateCount; k++ {
+				closureExist := r.checkClosureExist(i, k)
+				pathExist := r.checkPathExist(j, epsilon, k)
+
+				if !closureExist && pathExist {
+					tail = tail + 1
+					queue[tail] = k
+
+					r.closureMap[Closure{Src: i, Dst: k}] = true
+				}
+			}
+		}
+	}
+}
+
 func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 
 	//single symbol
@@ -154,9 +204,11 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 
 func (r *Re2EpsNFA) StartParse() string {
 	var result []byte
+	r.calculateNext(r.regexString)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
 
+	return string(result)
 }
 
 func (r *Re2EpsNFA) GetEpsNFA() *ENFA {

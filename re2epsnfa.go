@@ -8,17 +8,19 @@ import (
 )
 
 const epsilon = 2 //total symbol, 0, 1, 2(epsilon)
+const maxNumState = 200
 
 type Edge struct {
-	SrcState int
-	Input    int
-	DstState int
+	Src   int
+	Input int
+	Dst   int
 }
 
 type Closure struct {
 	Src int
 	Dst int
 }
+
 type Re2EpsNFA struct {
 	regexString     string
 	nextParentheses []int
@@ -40,7 +42,7 @@ func (r *Re2EpsNFA) incCapacity() int {
 }
 
 func (r *Re2EpsNFA) addEdge(stateSrc int, cInput int, stateDst int) {
-	newEdge := Edge{SrcState: stateSrc, Input: cInput, DstState: stateDst}
+	newEdge := Edge{Src: stateSrc, Input: cInput, Dst: stateDst}
 	r.edgeMap[newEdge] = true
 }
 
@@ -75,7 +77,7 @@ func (r *Re2EpsNFA) closure(s, t int) (int, int) {
 
 func (r *Re2EpsNFA) calculateNext(re string) {
 	reLength := len(re)
-	for i := 0; i <= reLength; i++ {
+	for i := 0; i < reLength; i++ {
 		if re[i] == '(' {
 			k := 0
 			j := i
@@ -95,7 +97,7 @@ func (r *Re2EpsNFA) calculateNext(re string) {
 				j = j + 1
 			}
 		} else {
-			r.nextParentheses[i] = i
+			r.nextParentheses = append(r.nextParentheses, i)
 		}
 	}
 }
@@ -107,15 +109,15 @@ func (r *Re2EpsNFA) checkClosureExist(src, target int) bool {
 
 func (r *Re2EpsNFA) checkPathExist(src, input, dst int) bool {
 
-	pathExist, _ := r.edgeMap[Edge{SrcState: src, Input: input, DstState: dst}]
+	pathExist, _ := r.edgeMap[Edge{Src: src, Input: input, Dst: dst}]
 	return pathExist
 }
 
 func (r *Re2EpsNFA) calcClosure() {
-	var queue []int
+	queue := make([]int, 200)
 
 	for i := 0; i <= r.stateCount; i++ {
-		for j := 0; j <= r.stateCount; j++ {
+		for j := 0; j < r.stateCount; j++ {
 			r.closureMap[Closure{Src: i, Dst: j}] = true
 		}
 
@@ -129,7 +131,7 @@ func (r *Re2EpsNFA) calcClosure() {
 			head = head + 1
 			j := queue[head]
 
-			for k := 0; k <= r.stateCount; k++ {
+			for k := 0; k < r.stateCount; k++ {
 				closureExist := r.checkClosureExist(i, k)
 				pathExist := r.checkPathExist(j, epsilon, k)
 
@@ -145,18 +147,22 @@ func (r *Re2EpsNFA) calcClosure() {
 }
 
 func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
+	fmt.Println("Parse  s=", s, " t=", t)
 
 	//single symbol
 	if s == t {
 		newStart := r.incCapacity()
 		newFinal := r.incCapacity()
+		fmt.Println("single symbol=", newStart, newFinal)
 
 		if re[s] == 'e' {
 			r.addEdge(newStart, epsilon, newFinal)
 		} else {
 			num, _ := strconv.Atoi(string(re[s]))
 			r.addEdge(newStart, num, newFinal)
+			fmt.Println("single: addEdge", newStart, num, newFinal)
 		}
+		return newStart, newFinal
 	}
 
 	//(...)
@@ -168,10 +174,11 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 
 	//RE1+RE2
 	i := s
-	for {
+	for i <= t {
 		i = r.nextParentheses[i]
 
 		if i <= t && re[i] == '+' {
+			fmt.Println("RE1+RE2")
 			s1, t1 := r.parse(re, s, i-1)
 			s2, t2 := r.parse(re, i+1, t)
 			retS, retF := r.union(s1, s2, t1, t2)
@@ -182,13 +189,15 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 
 	//RE1.RE2
 	i = s
-	for {
+	for i <= t {
 		i = r.nextParentheses[i]
 
 		if i <= t && re[i] == '.' {
+			fmt.Println("RE1.RE2")
 			s1, t1 := r.parse(re, s, i-1)
 			s2, t2 := r.parse(re, i+1, t)
 
+			fmt.Println("concate: ", s1, s2, t1, t2)
 			retS, retF := r.concatenation(s1, s2, t1, t2)
 			return retS, retF
 
@@ -197,6 +206,7 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 	}
 
 	//(RE)*
+	fmt.Println("go (RE)*")
 	s1, t1 := r.parse(re, s, t-1)
 	retS, retF := r.closure(s1, t1)
 	return retS, retF
@@ -204,9 +214,18 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 
 func (r *Re2EpsNFA) StartParse() string {
 	var result []byte
+	fmt.Println(r.regexString)
 	r.calculateNext(r.regexString)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
+
+	r.calcClosure()
+
+	for length := 1; length < 7; length++ {
+		for num := 0; uint(num) < (uint(1) << uint(length)); num++ {
+
+		}
+	}
 
 	return string(result)
 }

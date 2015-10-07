@@ -24,26 +24,34 @@ type Closure struct {
 type Re2EpsNFA struct {
 	regexString     string
 	nextParentheses []int
-	edgeMap         map[Edge]bool
-	stateCount      int
-	closureMap      map[Closure]bool
+	//edgeMap         map[Edge]bool
+	stateCount int
+	closureMap map[Closure]bool
+	enfa       *ENFA
 }
 
 func NewRe2EpsNFA(str string) *Re2EpsNFA {
 	newRe2NFA := &Re2EpsNFA{regexString: str}
-	newRe2NFA.edgeMap = make(map[Edge]bool)
+	//newRe2NFA.edgeMap = make(map[Edge]bool)
 	newRe2NFA.closureMap = make(map[Closure]bool)
 	return newRe2NFA
 }
 
 func (r *Re2EpsNFA) incCapacity() int {
+	if r.enfa == nil {
+		r.enfa = NewENFA(0, false)
+	} else {
+		r.enfa.AddState(r.stateCount-1, false)
+	}
 	r.stateCount = r.stateCount + 1
 	return r.stateCount - 1
 }
 
 func (r *Re2EpsNFA) addEdge(stateSrc int, cInput int, stateDst int) {
-	newEdge := Edge{Src: stateSrc, Input: cInput, Dst: stateDst}
-	r.edgeMap[newEdge] = true
+	//newEdge := Edge{Src: stateSrc, Input: cInput, Dst: stateDst}
+	//r.edgeMap[newEdge] = true
+	r.enfa.AddTransition(stateSrc, string(cInput), stateDst)
+
 }
 
 func (r *Re2EpsNFA) union(s1, s2, t1, t2 int) (int, int) {
@@ -110,9 +118,13 @@ func (r *Re2EpsNFA) checkClosureExist(src, target int) bool {
 }
 
 func (r *Re2EpsNFA) checkPathExist(src, input, dst int) bool {
+	if r.enfa == nil {
+		return false
+	}
 
-	pathExist, _ := r.edgeMap[Edge{Src: src, Input: input, Dst: dst}]
-	return pathExist
+	return r.enfa.CheckPathExist(src, string(input), dst)
+	//pathExist, _ := r.edgeMap[Edge{Src: src, Input: input, Dst: dst}]
+	//return pathExist
 }
 
 func (r *Re2EpsNFA) calcClosure() {
@@ -214,25 +226,27 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 	return retS, retF
 }
 
-func (r *Re2EpsNFA) StartParse() string {
-	var result []byte
+func (r *Re2EpsNFA) StartParse() {
+	//var result []byte
 	fmt.Println(r.regexString)
 	r.calculateNext(r.regexString)
 	fmt.Println("Next Pa=", r.nextParentheses)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
+	/*
+		r.calcClosure()
 
-	r.calcClosure()
+		//Prepare all string length < 7 accept by this epsilon-NFA
+		for length := 1; length < 7; length++ {
+			for num := 0; uint(num) < (uint(1) << uint(length)); num++ {
 
-	for length := 1; length < 7; length++ {
-		for num := 0; uint(num) < (uint(1) << uint(length)); num++ {
-
+			}
 		}
-	}
+		return string(result)
+	*/
 
-	return string(result)
 }
 
 func (r *Re2EpsNFA) GetEpsNFA() *ENFA {
-	return nil
+	return r.enfa
 }

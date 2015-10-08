@@ -50,7 +50,11 @@ func (r *Re2EpsNFA) incCapacity() int {
 func (r *Re2EpsNFA) addEdge(stateSrc int, cInput int, stateDst int) {
 	//newEdge := Edge{Src: stateSrc, Input: cInput, Dst: stateDst}
 	//r.edgeMap[newEdge] = true
-	r.enfa.AddTransition(stateSrc, string(cInput), stateDst)
+	var inputString string
+	if cInput != 2 {
+		inputString = strconv.Itoa(cInput)
+	}
+	r.enfa.AddTransition(stateSrc, inputString, stateDst)
 
 }
 
@@ -122,7 +126,7 @@ func (r *Re2EpsNFA) checkPathExist(src, input, dst int) bool {
 		return false
 	}
 
-	return r.enfa.CheckPathExist(src, string(input), dst)
+	return r.enfa.CheckPathExist(src, strconv.Itoa(input), dst)
 	//pathExist, _ := r.edgeMap[Edge{Src: src, Input: input, Dst: dst}]
 	//return pathExist
 }

@@ -3,7 +3,7 @@ package re2epsnfa
 import "testing"
 
 func TestSimpleRE(t *testing.T) {
-	trans := NewRe2EpsNFA("(0+1.0)*.(e+1)")
+	trans := NewRe2EpsNFA("1.0.1")
 	trans.StartParse()
 	enfa := trans.GetEpsNFA()
 	enfa.PrintTransitionTable()

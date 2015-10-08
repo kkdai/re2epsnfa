@@ -159,20 +159,20 @@ func (r *Re2EpsNFA) calcClosure() {
 }
 
 func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
-	fmt.Println("Parse  s=", s, " t=", t)
+	//fmt.Println("Parse  s=", s, " t=", t)
 
 	//single symbol
 	if s == t {
 		newStart := r.incCapacity()
 		newFinal := r.incCapacity()
-		fmt.Println("single symbol=", newStart, newFinal)
+		//fmt.Println("single symbol=", newStart, newFinal)
 
 		if re[s] == 'e' {
 			r.addEdge(newStart, epsilon, newFinal)
 		} else {
 			num, _ := strconv.Atoi(string(re[s]))
 			r.addEdge(newStart, num, newFinal)
-			fmt.Println("single: addEdge", newStart, num, newFinal)
+			//fmt.Println("single: addEdge", newStart, num, newFinal)
 		}
 		return newStart, newFinal
 	}
@@ -190,7 +190,7 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 		i = r.nextParentheses[i]
 
 		if i <= t && re[i] == '+' {
-			fmt.Println("RE1+RE2")
+			//fmt.Println("RE1+RE2")
 			s1, t1 := r.parse(re, s, i-1)
 			s2, t2 := r.parse(re, i+1, t)
 			retS, retF := r.doUnion(s1, s2, t1, t2)
@@ -205,11 +205,11 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 		i = r.nextParentheses[i]
 
 		if i <= t && re[i] == '.' {
-			fmt.Println("RE1.RE2")
+			//fmt.Println("RE1.RE2")
 			s1, t1 := r.parse(re, s, i-1)
 			s2, t2 := r.parse(re, i+1, t)
 
-			fmt.Println("concate: ", s1, s2, t1, t2)
+			//fmt.Println("concate: ", s1, s2, t1, t2)
 			retS, retF := r.doConcatenation(s1, s2, t1, t2)
 			return retS, retF
 
@@ -218,16 +218,16 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 	}
 
 	//(RE)*
-	fmt.Println("go (RE)*")
+	//fmt.Println("go (RE)*")
 	s1, t1 := r.parse(re, s, t-1)
 	retS, retF := r.closure(s1, t1)
 	return retS, retF
 }
 
 func (r *Re2EpsNFA) StartParse() {
-	fmt.Println(r.regexString)
+	//fmt.Println(r.regexString)
 	r.calculateNext(r.regexString)
-	fmt.Println("Next Pa=", r.nextParentheses)
+	//fmt.Println("Next Pa=", r.nextParentheses)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
 }

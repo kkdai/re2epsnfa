@@ -7,8 +7,30 @@ RE2EPSNFA: A tranform function to translate RE to Epsilon-NFA (Epsilon-Nondeterm
 
 ![image](images/nfa_dfa_re_convert.png)
 
+What is this package 
+=============
+
+`re2epsnfa` (Regular Expression to Eplison-NFA) will help you to convert regular expression string to [epsilon-NFA](http://github.com/kkdai/enfa) object.
+
+####The convert rule base on three simple rule:
+
+![image](images/RENFA1.png)
+
+`union`: ex: A union B
 
 
+
+![image](images/RENFA2.png)
+
+`concatenation`:  ex: A concatenation B
+    
+    
+    
+![image](images/RENFA3.png)    
+
+`closure`: ex: Closure(A)
+
+ 
 What is Epsilon-Nondeterministic finite automaton
 =============
 
@@ -28,7 +50,6 @@ Install
 ---------------
 
     go get github.com/kkdai/re2epsnfa
-
 
 
 Usage
@@ -61,6 +82,8 @@ Inspired By
 
 - [ε-NFA: Wiki](https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton_with_%CE%B5-moves)
 - [Coursera: Automata](https://class.coursera.org/automata-004/)
+- [PDA: Constructing -NFA’s From Regular Expressions](https://people.cs.umass.edu/~immerman/cs250/regExpToNFA.pdf)
+- [Youtube: Regular Expression to NFA](https://www.youtube.com/watch?v=RYNN-tb9WxI)
 
 Project52
 ---------------

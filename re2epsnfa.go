@@ -24,15 +24,13 @@ type Closure struct {
 type Re2EpsNFA struct {
 	regexString     string
 	nextParentheses []int
-	//edgeMap         map[Edge]bool
-	stateCount int
-	closureMap map[Closure]bool
-	enfa       *ENFA
+	stateCount      int
+	closureMap      map[Closure]bool
+	enfa            *ENFA
 }
 
 func NewRe2EpsNFA(str string) *Re2EpsNFA {
 	newRe2NFA := &Re2EpsNFA{regexString: str}
-	//newRe2NFA.edgeMap = make(map[Edge]bool)
 	newRe2NFA.closureMap = make(map[Closure]bool)
 	return newRe2NFA
 }
@@ -48,8 +46,6 @@ func (r *Re2EpsNFA) incCapacity() int {
 }
 
 func (r *Re2EpsNFA) addEdge(stateSrc int, cInput int, stateDst int) {
-	//newEdge := Edge{Src: stateSrc, Input: cInput, Dst: stateDst}
-	//r.edgeMap[newEdge] = true
 	var inputString string
 	if cInput != 2 {
 		inputString = strconv.Itoa(cInput)
@@ -58,7 +54,7 @@ func (r *Re2EpsNFA) addEdge(stateSrc int, cInput int, stateDst int) {
 
 }
 
-func (r *Re2EpsNFA) union(s1, s2, t1, t2 int) (int, int) {
+func (r *Re2EpsNFA) doUnion(s1, s2, t1, t2 int) (int, int) {
 	newStartState := r.incCapacity()
 	newFinalState := r.incCapacity()
 
@@ -71,7 +67,7 @@ func (r *Re2EpsNFA) union(s1, s2, t1, t2 int) (int, int) {
 	return newStartState, newFinalState
 }
 
-func (r *Re2EpsNFA) concatenation(s1, s2, t1, t2 int) (int, int) {
+func (r *Re2EpsNFA) doConcatenation(s1, s2, t1, t2 int) (int, int) {
 	r.addEdge(t1, 2, s2)
 	return s1, t2
 }
@@ -127,8 +123,6 @@ func (r *Re2EpsNFA) checkPathExist(src, input, dst int) bool {
 	}
 
 	return r.enfa.CheckPathExist(src, strconv.Itoa(input), dst)
-	//pathExist, _ := r.edgeMap[Edge{Src: src, Input: input, Dst: dst}]
-	//return pathExist
 }
 
 func (r *Re2EpsNFA) calcClosure() {
@@ -199,7 +193,7 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 			fmt.Println("RE1+RE2")
 			s1, t1 := r.parse(re, s, i-1)
 			s2, t2 := r.parse(re, i+1, t)
-			retS, retF := r.union(s1, s2, t1, t2)
+			retS, retF := r.doUnion(s1, s2, t1, t2)
 			return retS, retF
 		}
 		i = i + 1
@@ -216,7 +210,7 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 			s2, t2 := r.parse(re, i+1, t)
 
 			fmt.Println("concate: ", s1, s2, t1, t2)
-			retS, retF := r.concatenation(s1, s2, t1, t2)
+			retS, retF := r.doConcatenation(s1, s2, t1, t2)
 			return retS, retF
 
 		}
@@ -231,24 +225,11 @@ func (r *Re2EpsNFA) parse(re string, s, t int) (int, int) {
 }
 
 func (r *Re2EpsNFA) StartParse() {
-	//var result []byte
 	fmt.Println(r.regexString)
 	r.calculateNext(r.regexString)
 	fmt.Println("Next Pa=", r.nextParentheses)
 	nfaStart, nfaFinal := r.parse(r.regexString, 0, len(r.regexString)-1)
 	fmt.Printf("new NFA s=%d, f=%d\n", nfaStart, nfaFinal)
-	/*
-		r.calcClosure()
-
-		//Prepare all string length < 7 accept by this epsilon-NFA
-		for length := 1; length < 7; length++ {
-			for num := 0; uint(num) < (uint(1) << uint(length)); num++ {
-
-			}
-		}
-		return string(result)
-	*/
-
 }
 
 func (r *Re2EpsNFA) GetEpsNFA() *ENFA {
